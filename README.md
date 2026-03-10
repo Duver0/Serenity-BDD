@@ -1,167 +1,258 @@
-# Serenity BDD – Google Search Example
+# Serenity BDD – OpenCart Automation
 
-Un ejemplo sencillo de **Serenity BDD** con Gradle que muestra:
+Proyecto de automatización web con **Serenity BDD + Gradle + JUnit 4** sobre el sitio:
 
-- La estructura del `build.gradle`
-- La configuración de `serenity.conf`
-- El **Reporte Vivo** (_Living Documentation_) con capturas de pantalla automáticas
-- Un test básico de 3 pasos: **Abrir Google → Buscar → Verificar resultados**
+- http://opencart.abstracta.us/
+
+El objetivo actual del proyecto es validar flujos básicos de una tienda OpenCart que sí permite interacción automatizada.
+
+## Qué hace ahora el proyecto
+
+La suite automatiza dos escenarios principales:
+
+1. **Resumen de compra MacBook**
+   - abre la tienda
+   - agrega `MacBook` al carrito desde productos destacados
+   - espera la confirmación visible del carrito
+   - abre el carrito desde el menú superior
+   - valida que el producto exista en el carrito
+   - lee los valores de `Sub-Total`, `Eco Tax (-2.00)`, `VAT (20%)` y `Total`
+
+2. **Resumen de compra iPhone**
+   - abre la tienda
+   - agrega `iPhone` al carrito desde productos destacados
+   - espera la confirmación visible del carrito
+   - abre el carrito desde el menú superior
+   - valida que el producto exista en el carrito
+   - lee los valores de `Sub-Total`, `Eco Tax (-2.00)`, `VAT (20%)` y `Total`
+
+Además, Serenity genera:
+
+- reporte HTML de ejecución
+- evidencia por pasos
+- capturas automáticas
+- detalle de resultados por escenario
 
 ---
 
-## Estructura del proyecto
+## Estructura actual del proyecto
 
-```
-serenity-bdd-google-example/
-├── build.gradle                          ← Dependencias y plugin de Serenity
-├── settings.gradle                       ← Nombre del proyecto Gradle
-├── serenity.conf                         ← Configuración de Serenity y WebDriver
+```text
+Serenity-BDD/
+├── build.gradle
+├── settings.gradle
+├── serenity.conf
 └── src/
     └── test/
         ├── java/
-        │   └── com/example/
+      │   └── com/opencart/
+        │       ├── features/
+      │       │   ├── OpencartIphoneTest.java
+      │       │   └── OpencartMacbookTest.java
         │       ├── pages/
-        │       │   └── GooglePage.java   ← Page Object (home + resultados)
-        │       ├── steps/
-        │       │   └── GoogleSteps.java  ← Librería de pasos (@Step)
-        │       └── features/
-        │           └── GoogleSearchTest.java  ← Test JUnit con SerenityRunner
+        │       │   └── OpenCartHomePage.java
+        │       └── steps/
+        │           └── OpenCartSteps.java
         └── resources/
-            └── logback-test.xml          ← Configuración de logging
+            └── logback-test.xml
 ```
+
+### Responsabilidad de cada capa
+
+- `OpencartMacbookTest` y `OpencartIphoneTest`: definen los escenarios de prueba
+- `OpenCartSteps`: encapsula acciones y validaciones de negocio
+- `OpenCartHomePage`: modela la UI, el carrito y los selectores del sitio
+- `serenity.conf`: configura navegador, screenshots y timeouts
+- `build.gradle`: dependencias, plugin, ejecución y apertura del reporte con Gradle
 
 ---
 
-## Estructura del `build.gradle`
+## Requisitos
 
-```groovy
-plugins {
-    id 'java'
-    id 'net.serenity-bdd.serenity-gradle-plugin' version '3.6.12'  // Plugin oficial
-}
+Para ejecutar el proyecto se necesita:
 
-dependencies {
-    testImplementation "net.serenity-bdd:serenity-core:3.6.12"     // Core de Serenity
-    testImplementation "net.serenity-bdd:serenity-junit:3.6.12"    // Integración JUnit 4
-    testImplementation "junit:junit:4.13.2"                         // Runner JUnit
-    testImplementation "org.assertj:assertj-core:3.27.7"           // Aserciones legibles
-    testImplementation "io.github.bonigarcia:webdrivermanager:6.1.0" // Auto-descarga ChromeDriver
-}
-```
-
-El plugin `serenity-gradle-plugin` registra la tarea `aggregate` que genera el
-reporte HTML en `build/site/serenity/`.
-
----
-
-## Configuración de `serenity.conf`
-
-```hocon
-serenity {
-    project.name    = "Serenity BDD – Google Search Example"
-    take.screenshots = AFTER_EACH_STEP   // Captura tras cada paso
-}
-
-webdriver {
-    driver = chrome
-    chrome.switches = "--headless=new,--no-sandbox,..."
-}
-
-timeouts {
-    implicit.wait    = 5    // segundos
-    default.wait.for = 10   // segundos
-}
-```
-
-> Para ver el navegador durante la ejecución, quita `--headless=new` de `chrome.switches`.
-
----
-
-## Los 3 pasos del test básico
-
-```java
-@Test
-@Title("Search for 'Serenity BDD' and verify results are displayed")
-public void searchForSerenityBDD() {
-
-    // Paso 1 – Abrir Google
-    googleSteps.opensGoogleHomePage();
-
-    // Paso 2 – Buscar un término
-    googleSteps.searchesFor("Serenity BDD");
-
-    // Paso 3 – Verificar que aparecen resultados
-    googleSteps.verifiesResultsAreDisplayed();
-}
-```
-
-Los pasos están definidos en `GoogleSteps` con la anotación `@Step`:
-
-```java
-@Step("opens Google home page")
-public void opensGoogleHomePage() { ... }
-
-@Step("searches for '{0}'")
-public void searchesFor(String searchTerm) { ... }
-
-@Step("verifies search results are displayed")
-public void verifiesResultsAreDisplayed() { ... }
-```
-
-Cada `@Step` aparece nombrado en el reporte HTML con su captura de pantalla.
-
----
-
-## Cómo ejecutar
-
-### Requisitos previos
-
-| Herramienta | Versión mínima |
+| Requisito | Versión sugerida |
 |---|---|
-| Java (JDK) | 11 |
-| Gradle | 7 (o usa el wrapper incluido) |
-| Google Chrome | cualquier versión reciente |
+| Java JDK | 17 o superior |
+| Google Chrome | versión reciente |
+| Linux / Windows / macOS | cualquiera |
 
-> `WebDriverManager` descarga automáticamente el `chromedriver` correcto,
-> por lo que **no** necesitas instalarlo manualmente.
+### Notas importantes
 
-### Comandos
+- El proyecto usa el **Gradle Wrapper** (`./gradlew`), por lo que no es obligatorio instalar Gradle manualmente.
+- El proyecto usa **WebDriverManager**, así que no hace falta instalar `chromedriver` manualmente.
+- La configuración actual usa Chrome en modo **headless**.
+
+Si quieres ver el navegador en ejecución, edita [serenity.conf](serenity.conf) y elimina `--headless=new` de `chrome.switches`.
+
+---
+
+## Dependencias principales
+
+El proyecto usa actualmente:
+
+- `serenity-core` `5.3.3`
+- `serenity-junit` `5.3.3`
+- `junit` `4.13.2`
+- `assertj-core` `3.27.7`
+- `webdrivermanager` `6.1.0`
+- `logback-classic` `1.5.18`
+
+---
+
+## Escenarios automatizados
+
+### 1. Resumen de compra MacBook
+
+Escenario implementado en la clase de pruebas:
+
+- abrir la home de OpenCart
+- agregar `MacBook` al carrito
+- esperar la confirmación explícita del carrito
+- abrir el carrito desde el menú superior
+- verificar que `MacBook` esté presente en el carrito
+- leer el resumen de compra
+
+### 2. Resumen de compra iPhone
+
+Escenario implementado en la clase de pruebas:
+
+- abrir la home de OpenCart
+- agregar `iPhone` al carrito
+- esperar la confirmación explícita del carrito
+- abrir el carrito desde el menú superior
+- verificar que `iPhone` esté presente en el carrito
+- leer el resumen de compra
+
+### Totales leídos en el carrito
+
+En ambos escenarios se recuperan y reportan estos campos:
+
+- `Sub-Total:`
+- `Eco Tax (-2.00):`
+- `VAT (20%):`
+- `Total:`
+
+### Pasos funcionales
+
+Los pasos reportados por Serenity incluyen acciones como:
+
+- abrir la home de la tienda
+- agregar un producto destacado al carrito
+- esperar la confirmación del carrito
+- abrir el shopping cart desde el menú superior
+- validar que el producto exista en el carrito
+- leer y registrar el resumen de compra
+
+---
+
+## Configuración relevante
+
+La configuración principal está en [serenity.conf](serenity.conf):
+
+- navegador `chrome`
+- screenshots `AFTER_EACH_STEP`
+- ejecución headless
+- timeouts de espera implícita y espera por defecto
+
+Esto permite ejecutar la suite sin abrir una ventana visual del navegador y conservar evidencia en el reporte.
+
+---
+
+## Pasos de ejecución
+
+### 1. Dar permisos al wrapper, si hace falta
 
 ```bash
-# 1. Compilar y ejecutar los tests
-./gradlew clean test
+chmod +x gradlew
+```
 
-# 2. Generar el reporte HTML (Living Documentation)
-./gradlew aggregate
+### 2. Ejecutar la suite completa
 
-# Atajo: test + reporte en un solo comando
+```bash
 ./gradlew clean test aggregate
 ```
 
-### Ver el Reporte Vivo
+### 3. Ejecutar solo los tests
 
-Tras ejecutar `aggregate`, abre en el navegador:
-
-```
-build/site/serenity/index.html
+```bash
+./gradlew clean test
 ```
 
-El reporte incluye:
-- Estado de cada test (✅ passed / ❌ failed)
-- Detalle de cada paso con su **captura de pantalla**
-- Estadísticas generales del proyecto
+### 4. Generar solo el reporte
+
+```bash
+./gradlew aggregate
+```
+
+### 5. Abrir el reporte automáticamente
+
+```bash
+./gradlew openReport
+```
+
+Este comando genera el reporte si hace falta y luego intenta abrir [target/site/serenity/index.html](target/site/serenity/index.html) en el navegador predeterminado.
+
+### 6. Ejecutar todo y abrir el reporte
+
+```bash
+./gradlew runTestsAndOpenReport
+```
+
+Este comando:
+
+- limpia la ejecución anterior
+- corre los tests
+- genera el reporte Serenity
+- abre el reporte automáticamente en el navegador
 
 ---
 
 ## Resultado esperado
 
-```
-> Task :test
-com.example.features.GoogleSearchTest > searchForSerenityBDD PASSED
-com.example.features.GoogleSearchTest > searchForJavaAutomationTesting PASSED
+Al ejecutar correctamente, deberías ver una salida similar a esta:
 
-BUILD SUCCESSFUL in Xs
+```text
+OpencartMacbookTest > resumenDeCompraMacBook PASSED
+OpencartIphoneTest > resumenDeCompraIPhone PASSED
+
+BUILD SUCCESSFUL
 ```
 
-El directorio `build/site/serenity/` contendrá el reporte HTML interactivo
-con las capturas de pantalla de cada paso.
+---
+
+## Reporte de Serenity
+
+Después de la ejecución, el reporte queda disponible en:
+
+- [target/site/serenity/index.html](target/site/serenity/index.html)
+
+El reporte incluye:
+
+- estado de cada escenario
+- detalle paso a paso
+- capturas automáticas
+- evidencia funcional de la ejecución
+- resumen de compra registrado para `MacBook` e `iPhone`
+
+---
+
+## Comandos útiles
+
+```bash
+./gradlew clean
+./gradlew test
+./gradlew aggregate
+./gradlew openReport
+./gradlew runTestsAndOpenReport
+./gradlew clean test aggregate --no-daemon
+```
+
+---
+
+## Posibles mejoras futuras
+
+- parametrizar productos de búsqueda
+- cubrir flujo de checkout
+- agregar validaciones de categorías
+- migrar el runner actual si se quiere evitar la advertencia de deprecación de `SerenityRunner`
