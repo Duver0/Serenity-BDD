@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+    id 'net.serenity-bdd.serenity-gradle-plugin' version '3.6.12'
+}
+
+group   = 'com.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+// ─── Dependency versions ────────────────────────────────────────────────────
+ext {
+    serenityCoreVersion   = '3.6.12'
+    junitVersion          = '4.13.2'
+    assertjVersion        = '3.27.7'
+    webdrivermanagerVersion = '6.1.0'
+}
+
+dependencies {
+    // Serenity BDD core + JUnit integration
+    testImplementation "net.serenity-bdd:serenity-core:${serenityCoreVersion}"
+    testImplementation "net.serenity-bdd:serenity-junit:${serenityCoreVersion}"
+
+    // JUnit 4 (required by serenity-junit runner)
+    testImplementation "junit:junit:${junitVersion}"
+
+    // AssertJ for readable assertions
+    testImplementation "org.assertj:assertj-core:${assertjVersion}"
+
+    // WebDriverManager – downloads the right ChromeDriver automatically
+    testImplementation "io.github.bonigarcia:webdrivermanager:${webdrivermanagerVersion}"
+}
+
+// ─── Test configuration ─────────────────────────────────────────────────────
+test {
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        showStandardStreams = true
+    }
+}
+
+// ─── Serenity aggregate report ───────────────────────────────────────────────
+// Run with:  ./gradlew clean test aggregate
+// The HTML report will be generated in:  build/site/serenity/
+aggregate.mustRunAfter test
