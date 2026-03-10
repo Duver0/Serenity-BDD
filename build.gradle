@@ -1,9 +1,9 @@
 plugins {
     id 'java'
-    id 'net.serenity-bdd.serenity-gradle-plugin' version '3.6.12'
+    id 'net.serenity-bdd.serenity-gradle-plugin' version '5.3.3'
 }
 
-group   = 'com.example'
+group   = 'com.opencart'
 version = '1.0-SNAPSHOT'
 
 repositories {
@@ -12,10 +12,11 @@ repositories {
 
 // ─── Dependency versions ────────────────────────────────────────────────────
 ext {
-    serenityCoreVersion   = '3.6.12'
+    serenityCoreVersion   = '5.3.3'
     junitVersion          = '4.13.2'
     assertjVersion        = '3.27.7'
     webdrivermanagerVersion = '6.1.0'
+    logbackVersion        = '1.5.18'
 }
 
 dependencies {
@@ -31,6 +32,9 @@ dependencies {
 
     // WebDriverManager – downloads the right ChromeDriver automatically
     testImplementation "io.github.bonigarcia:webdrivermanager:${webdrivermanagerVersion}"
+
+    // Logging backend for SLF4J so logback-test.xml is applied during test runs
+    testRuntimeOnly "ch.qos.logback:logback-classic:${logbackVersion}"
 }
 
 // ─── Test configuration ─────────────────────────────────────────────────────
@@ -45,3 +49,41 @@ test {
 // Run with:  ./gradlew clean test aggregate
 // The HTML report will be generated in:  build/site/serenity/
 aggregate.mustRunAfter test
+
+tasks.register('openReport') {
+    group = 'verification'
+    description = 'Opens the Serenity HTML report in the default browser.'
+    dependsOn aggregate
+
+    doLast {
+        def reportFile = file("${project.projectDir}/target/site/serenity/index.html")
+
+        if (!reportFile.exists()) {
+            throw new GradleException("Serenity report not found: ${reportFile}")
+        }
+
+        def osName = System.getProperty('os.name').toLowerCase()
+        List<String> command
+
+        if (osName.contains('linux')) {
+            command = ['xdg-open', reportFile.absolutePath]
+        } else if (osName.contains('mac')) {
+            command = ['open', reportFile.absolutePath]
+        } else if (osName.contains('windows')) {
+            command = ['cmd', '/c', 'start', '', reportFile.absolutePath]
+        } else {
+            println "Open the report manually at: ${reportFile.absolutePath}"
+            return
+        }
+
+        new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start()
+    }
+}
+
+tasks.register('runTestsAndOpenReport') {
+    group = 'verification'
+    description = 'Cleans, runs the Serenity tests, generates the report, and opens it in the default browser.'
+    dependsOn clean, test, openReport
+}
