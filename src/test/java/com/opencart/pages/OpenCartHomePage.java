@@ -58,6 +58,10 @@ public class OpenCartHomePage extends PageObject {
                 .anyMatch(product -> product.getText().trim().equalsIgnoreCase(productName));
     }
 
+    public boolean canAddProductToCart(String productName) {
+        return !findAll(addToCartButtonLocator(productName)).isEmpty();
+    }
+
     public void addFeaturedProductToCart(String productName) {
         WebElementFacade addToCartButton = find(By.xpath(
                 "//a[normalize-space()='" + productName + "']" +
@@ -66,6 +70,10 @@ public class OpenCartHomePage extends PageObject {
         ));
 
         addToCartButton.waitUntilClickable().click();
+    }
+
+    public void addCatalogProductToCart(String productName) {
+        find(addToCartButtonLocator(productName)).waitUntilClickable().click();
     }
 
     public void waitForCartConfirmation(String productName, String expectedItemCount) {
@@ -114,5 +122,13 @@ public class OpenCartHomePage extends PageObject {
 
     public String getPageTitle() {
         return getDriver().getTitle();
+    }
+
+    private By addToCartButtonLocator(String productName) {
+        return By.xpath(
+                "//a[normalize-space()='" + productName + "']" +
+                        "/ancestor::div[contains(@class,'product-thumb')]" +
+                        "//button[contains(@onclick,'cart.add')]"
+        );
     }
 }
