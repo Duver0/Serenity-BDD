@@ -44,8 +44,8 @@ dependencies {
     testImplementation "net.serenity-bdd:serenity-core:3.6.12"     // Core de Serenity
     testImplementation "net.serenity-bdd:serenity-junit:3.6.12"    // Integración JUnit 4
     testImplementation "junit:junit:4.13.2"                         // Runner JUnit
-    testImplementation "org.assertj:assertj-core:3.24.2"           // Aserciones legibles
-    testImplementation "io.github.bonigarcia:webdrivermanager:5.6.3" // Auto-descarga ChromeDriver
+    testImplementation "org.assertj:assertj-core:3.27.7"           // Aserciones legibles
+    testImplementation "io.github.bonigarcia:webdrivermanager:6.1.0" // Auto-descarga ChromeDriver
 }
 ```
 

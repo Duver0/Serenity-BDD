@@ -14,8 +14,8 @@ repositories {
 ext {
     serenityCoreVersion   = '3.6.12'
     junitVersion          = '4.13.2'
-    assertjVersion        = '3.24.2'
-    webdrivermanagerVersion = '5.6.3'
+    assertjVersion        = '3.27.7'
+    webdrivermanagerVersion = '6.1.0'
 }
 
 dependencies {
