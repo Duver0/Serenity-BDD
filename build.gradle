@@ -3,11 +3,39 @@ plugins {
     id 'net.serenity-bdd.serenity-gradle-plugin' version '5.3.3'
 }
 
+import groovy.xml.XmlSlurper
+
 group   = 'com.opencart'
 version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+}
+
+def openSerenityReport = {
+    def reportFile = file("${project.projectDir}/target/site/serenity/index.html")
+
+    if (!reportFile.exists()) {
+        throw new GradleException("Serenity report not found: ${reportFile}")
+    }
+
+    def osName = System.getProperty('os.name').toLowerCase()
+    List<String> command
+
+    if (osName.contains('linux')) {
+        command = ['xdg-open', reportFile.absolutePath]
+    } else if (osName.contains('mac')) {
+        command = ['open', reportFile.absolutePath]
+    } else if (osName.contains('windows')) {
+        command = ['cmd', '/c', 'start', '', reportFile.absolutePath]
+    } else {
+        println "Open the report manually at: ${reportFile.absolutePath}"
+        return
+    }
+
+    new ProcessBuilder(command)
+            .redirectErrorStream(true)
+            .start()
 }
 
 // ─── Dependency versions ────────────────────────────────────────────────────
@@ -39,9 +67,19 @@ dependencies {
 
 // ─── Test configuration ─────────────────────────────────────────────────────
 test {
+    ignoreFailures = gradle.startParameter.taskNames.contains('runTestsAndOpenReport')
+
     testLogging {
         events 'passed', 'skipped', 'failed'
         showStandardStreams = true
+    }
+}
+
+gradle.taskGraph.whenReady {
+    if (test.filter.commandLineIncludePatterns.empty) {
+        test.include '**/OpencartOrderedTestSuite.class'
+    } else {
+        test.setIncludes([])
     }
 }
 
@@ -56,34 +94,44 @@ tasks.register('openReport') {
     dependsOn aggregate
 
     doLast {
-        def reportFile = file("${project.projectDir}/target/site/serenity/index.html")
+        openSerenityReport()
+    }
+}
 
-        if (!reportFile.exists()) {
-            throw new GradleException("Serenity report not found: ${reportFile}")
-        }
+tasks.register('failIfTestsFailed') {
+    group = 'verification'
+    description = 'Fails the build after opening the Serenity report when there are failed tests.'
+    dependsOn aggregate
 
-        def osName = System.getProperty('os.name').toLowerCase()
-        List<String> command
+    doLast {
+        openSerenityReport()
 
-        if (osName.contains('linux')) {
-            command = ['xdg-open', reportFile.absolutePath]
-        } else if (osName.contains('mac')) {
-            command = ['open', reportFile.absolutePath]
-        } else if (osName.contains('windows')) {
-            command = ['cmd', '/c', 'start', '', reportFile.absolutePath]
-        } else {
-            println "Open the report manually at: ${reportFile.absolutePath}"
+        def testResultsDir = file("${buildDir}/test-results/test")
+
+        if (!testResultsDir.exists()) {
             return
         }
 
-        new ProcessBuilder(command)
-                .redirectErrorStream(true)
-                .start()
+        def xmlFiles = fileTree(testResultsDir) {
+            include 'TEST-*.xml'
+        }
+
+        int failedTests = xmlFiles.collect { file ->
+            def suite = new XmlSlurper().parse(file)
+            (suite.@failures.text() ?: '0').toInteger() + (suite.@errors.text() ?: '0').toInteger()
+        }.sum(0)
+
+        if (failedTests > 0) {
+            throw new GradleException("There were ${failedTests} failing test(s). The Serenity report was generated and opened.")
+        }
     }
 }
 
 tasks.register('runTestsAndOpenReport') {
     group = 'verification'
-    description = 'Cleans, runs the Serenity tests, generates the report, and opens it in the default browser.'
-    dependsOn clean, test, openReport
+    description = 'Cleans, runs the Serenity tests, and always opens the Serenity report even if some tests fail.'
+    dependsOn clean, test, failIfTestsFailed
 }
+
+openReport.mustRunAfter aggregate
+failIfTestsFailed.mustRunAfter aggregate

@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 import org.openqa.selenium.WebDriver;
 
 @RunWith(SerenityRunner.class)
-public class OpencartIphoneTest {
+public class OpencartCamionetaNegativeTest {
 
     @Managed(uniqueSession = false)
     WebDriver driver;
@@ -26,17 +26,10 @@ public class OpencartIphoneTest {
     }
 
     @Test
-    @Title("Resumen de compra iPhone")
-    public void resumenDeCompraIPhone() {
+    @Title("Intento fallido de compra de camioneta")
+    public void intentoFallidoDeCompraDeCamioneta() {
         openCartSteps.opensStoreHomePage();
-        openCartSteps.addsIntentionalPerformanceDelay(10);
-        openCartSteps.addsFeaturedProductToCart("iPhone");
-        openCartSteps.waitsForCartConfirmation("iPhone", "1 item(s)");
-        openCartSteps.verifiesProductWasAddedToCart("iPhone");
-        openCartSteps.verifiesCartItemCount("1 item(s)");
-        openCartSteps.addsIntentionalPerformanceDelay(10);
-        openCartSteps.opensShoppingCartFromCartMenu();
-        openCartSteps.verifiesProductIsPresentInShoppingCart("iPhone");
-        openCartSteps.readsAndReportsPurchaseSummary("iPhone");
+        openCartSteps.searchesForProduct("Toyota Prado TXL 2024");
+        openCartSteps.triesToAddSearchedProductToCart("Toyota Prado TXL 2024");
     }
 }

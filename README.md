@@ -4,11 +4,11 @@ Proyecto de automatización web con **Serenity BDD + Gradle + JUnit 4** sobre el
 
 - http://opencart.abstracta.us/
 
-El objetivo actual del proyecto es validar flujos básicos de una tienda OpenCart que sí permite interacción automatizada.
+El objetivo actual del proyecto es validar flujos básicos de una tienda OpenCart que sí permite interacción automatizada, incluyendo un escenario negativo intencional para evidenciar cómo Serenity BDD reporta una falla funcional.
 
 ## Qué hace ahora el proyecto
 
-La suite automatiza dos escenarios principales:
+La suite automatiza tres escenarios principales:
 
 1. **Resumen de compra MacBook**
    - abre la tienda
@@ -20,11 +20,18 @@ La suite automatiza dos escenarios principales:
 
 2. **Resumen de compra iPhone**
    - abre la tienda
+  - ejecuta dos esperas intencionales de `10` segundos para degradar el tiempo total
    - agrega `iPhone` al carrito desde productos destacados
    - espera la confirmación visible del carrito
    - abre el carrito desde el menú superior
    - valida que el producto exista en el carrito
    - lee los valores de `Sub-Total`, `Eco Tax (-2.00)`, `VAT (20%)` y `Total`
+
+3. **Intento fallido de compra de camioneta**
+  - abre la tienda
+  - busca `camioneta`
+  - intenta agregarla al carrito
+  - falla porque el catálogo actual del sitio no vende vehículos
 
 Además, Serenity genera:
 
@@ -47,6 +54,7 @@ Serenity-BDD/
         ├── java/
       │   └── com/opencart/
         │       ├── features/
+      │       │   ├── OpencartCamionetaNegativeTest.java
       │       │   ├── OpencartIphoneTest.java
       │       │   └── OpencartMacbookTest.java
         │       ├── pages/
@@ -59,7 +67,7 @@ Serenity-BDD/
 
 ### Responsabilidad de cada capa
 
-- `OpencartMacbookTest` y `OpencartIphoneTest`: definen los escenarios de prueba
+- `OpencartMacbookTest`, `OpencartIphoneTest` y `OpencartCamionetaNegativeTest`: definen los escenarios de prueba
 - `OpenCartSteps`: encapsula acciones y validaciones de negocio
 - `OpenCartHomePage`: modela la UI, el carrito y los selectores del sitio
 - `serenity.conf`: configura navegador, screenshots y timeouts
@@ -118,11 +126,21 @@ Escenario implementado en la clase de pruebas:
 Escenario implementado en la clase de pruebas:
 
 - abrir la home de OpenCart
+- agregar pausas artificiales de `10` segundos para simular peor rendimiento
 - agregar `iPhone` al carrito
 - esperar la confirmación explícita del carrito
 - abrir el carrito desde el menú superior
 - verificar que `iPhone` esté presente en el carrito
 - leer el resumen de compra
+
+### 3. Intento fallido de compra de camioneta
+
+Escenario implementado en la clase de pruebas:
+
+- abrir la home de OpenCart
+- buscar `camioneta`
+- intentar agregar `camioneta` al carrito
+- fallar de forma intencional porque el sitio es de tecnología y no vende vehículos
 
 ### Totales leídos en el carrito
 
@@ -139,6 +157,9 @@ Los pasos reportados por Serenity incluyen acciones como:
 
 - abrir la home de la tienda
 - agregar un producto destacado al carrito
+- buscar un producto en el catálogo
+- intentar agregar un producto buscado al carrito
+- introducir una pausa artificial para comparar rendimiento entre escenarios
 - esperar la confirmación del carrito
 - abrir el shopping cart desde el menú superior
 - validar que el producto exista en el carrito
@@ -210,14 +231,19 @@ Este comando:
 
 ## Resultado esperado
 
-Al ejecutar correctamente, deberías ver una salida similar a esta:
+Al ejecutar la suite completa, deberías ver una salida similar a esta:
 
 ```text
 OpencartMacbookTest > resumenDeCompraMacBook PASSED
 OpencartIphoneTest > resumenDeCompraIPhone PASSED
+OpencartCamionetaNegativeTest > intentoFallidoDeCompraDeCamioneta FAILED
 
-BUILD SUCCESSFUL
+BUILD FAILED
 ```
+
+Esto es esperado: la tercera prueba está diseñada para fallar y mostrar en Serenity cómo se registra un escenario negativo con evidencia paso a paso.
+
+Además, el escenario de `iPhone` ahora incluye demoras artificiales para que en el reporte se vea con peor rendimiento que `MacBook`.
 
 ---
 
@@ -234,6 +260,8 @@ El reporte incluye:
 - capturas automáticas
 - evidencia funcional de la ejecución
 - resumen de compra registrado para `MacBook` e `iPhone`
+- un escenario negativo intencional para `camioneta` marcado como fallido
+- un escenario de `iPhone` con duración intencionalmente mayor para comparar tiempos
 
 ---
 

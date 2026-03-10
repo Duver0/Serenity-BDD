@@ -5,6 +5,7 @@ import net.serenitybdd.annotations.Step;
 import net.serenitybdd.core.Serenity;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +44,25 @@ public class OpenCartSteps {
     @Step("adds featured product '{0}' to the cart")
     public void addsFeaturedProductToCart(String productName) {
         openCartHomePage.addFeaturedProductToCart(productName);
+    }
+
+    @Step("tries to add searched product '{0}' to the cart")
+    public void triesToAddSearchedProductToCart(String productName) {
+        assertThat(openCartHomePage.canAddProductToCart(productName))
+                .as("Expected product '%s' to be available in the catalog to add it to the cart", productName)
+                .isTrue();
+
+        openCartHomePage.addCatalogProductToCart(productName);
+    }
+
+    @Step("adds an intentional performance delay of {0} seconds")
+    public void addsIntentionalPerformanceDelay(int seconds) {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("The intentional performance delay was interrupted", exception);
+        }
     }
 
     @Step("waits until product '{0}' is confirmed in the cart")
