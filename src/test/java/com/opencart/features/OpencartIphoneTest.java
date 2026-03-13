@@ -37,6 +37,7 @@ public class OpencartIphoneTest {
         openCartSteps.addsIntentionalPerformanceDelay(10);
         openCartSteps.opensShoppingCartFromCartMenu();
         openCartSteps.verifiesProductIsPresentInShoppingCart("iPhone");
+        openCartSteps.addsIntentionalPerformanceDelay(10);
         openCartSteps.readsAndReportsPurchaseSummary("iPhone");
     }
 }
